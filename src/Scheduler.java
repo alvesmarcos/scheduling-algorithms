@@ -19,7 +19,18 @@ public class Scheduler {
 	}
 	
 	//methods
+	//r = Routine.FCFS |
+	private void firstComeFirstServed(){
+		int sum = 0, len = queue.size();
+		Job first = null;
+
+		for(int i = 0; i < len ; i++){
+			//TODO
+		}
+	}
+
 	//loaderJobs expected command "java Main < jobs.txt" 
+	//public provisionally
 	public void loaderJobs(){
 		//getting keyboard input 
 		Scanner reader = new Scanner(System.in);
@@ -34,7 +45,7 @@ public class Scheduler {
 				parts = line.split(" ");
 				queue.add(new Job(Integer.parseInt(parts[0]), Integer.parseInt(parts[1])));
 			} else
-				throw new IllegalArgumentException("File doens't contains [space]!");
+				throw new IllegalArgumentException("File doens't contains SPACE!");
 		}	
 	}
 
@@ -49,7 +60,10 @@ public class Scheduler {
 
 	//print all elements of queue 
 	public void printQueue(){
-		for(Job j: queue)
-			System.out.println(j.toString());
+		queue.forEach(j->System.out.println(j.toString()));
+	}
+
+	public void run(){
+		//TODO
 	}
 }
