@@ -1,6 +1,6 @@
 // Created By: Marcos alves
 // Created Date: Sept. 10th, 2016	  
-// Last Modified: Sept. 10th, 2016	      
+// Last Modified: Sept. 15th, 2016	      
 
 public class Job {
 	//attributes
@@ -12,16 +12,24 @@ public class Job {
 		this.time = time;
 	} 
 
-	//getters
+	//methods
+	//get arrival
 	public int getArrival(){
 		return arrival;
 	}
-
+	//get time
 	public int getTime(){
 		return time;
 	}
-
-	//toString
+	//subtration time
+	public void subTime(int time){
+		this.time -= time;
+	}
+	//add time
+	public void addTime(int time){
+		this.time += time;
+	}
+	//return string formatted
 	public String toString(){
 		return "Arrival: "+arrival+"\t Time: "+time;
 	}
