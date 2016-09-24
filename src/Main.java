@@ -6,9 +6,10 @@ import java.util.*;
 
 public class Main {
 	public static void main(String args[]){
-		Scheduler shr = new Scheduler(Routine.FCFS);
+		Scheduler sched = new Scheduler(0x1);
 
-		shr.loaderJobs();
-		shr.printQueue();
+		//sched.printQueue();
+		sched.run();
+		sched.info();
 	}
 }
