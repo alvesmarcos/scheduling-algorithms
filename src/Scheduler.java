@@ -6,17 +6,22 @@ import java.util.*;
 import java.io.*;
 
 public class Scheduler {
+	//Algorithms scheduling
+	public static final int FCFS = 0x1; // First Come, First Served
+	public static final int RR = 0x2;	// Round-Robin
+    public static final int SJF = 0x3;  //Shortest Job First
+	
 	//attributes
 	private float response, waiting, turnaround; //AVERAGE
-	private Routine routine;
+	private int routine;
 	private Queue<Job> queue;
 	//print about Running jobs | true - print
-	protected static final boolean DEBUG = true;
+	protected static final boolean DEBUG = false;
 
 	//constructor
-	public Scheduler(Routine r){
+	public Scheduler(int r){
 		response = waiting = turnaround = 0.0f;
-		this.routine = r;
+		routine = r;
 		queue = new LinkedList<Job>();
 		
 		//expect path ../jobs.txt
@@ -26,15 +31,41 @@ public class Scheduler {
 	//methods
 	//routine = Routine.FCFS | 
 	private void firstComeFirstServed(){
-		int sum = 0, count = 0;
-		
+		int accTime = 0, count = 0;
+		//get first element
+		Job first = queue.peek();
+		int offset = first.getArrival();
+
 		while(!queue.isEmpty()){
+			//return and remove first element
+			first = queue.poll(); 
+
 			if(DEBUG)
-				System.out.println("Running job (" + (count++) + ") " + sum + "-" + 
-							  	  (sum+queue.peek().getTime()));
-			sum += queue.peek().getTime();
-			queue.poll();
+				System.out.println("Running job (" + count + ") " + accTime + "-" + 
+							  	  (accTime+first.getTime()));
+			//increment queue
+			count++;
+			waiting+=accTime + offset - first.getArrival();
+			accTime+=first.getTime(); 
+			turnaround+=accTime + offset - first.getArrival();
 		}
+		turnaround/=count;
+		waiting/=count;
+		response=waiting;
+	}
+
+	//print info about algorithm
+	public void info(){
+		String nameAlgorithm;
+		//what algorithm ?
+		switch(routine){
+			case FCFS: nameAlgorithm = "FCFS"; break;
+			case SJF:  nameAlgorithm = "SJF"; break;
+			case RR:   nameAlgorithm = "RR"; break;
+			default: throw new IllegalArgumentException("Undefined reference routine!");
+		}
+		//print
+		System.out.printf("%s %.1f %.1f %.1f\n", nameAlgorithm, turnaround, response, waiting);
 	}
 
 	//loaderJobs expected command "java Main < jobs.txt" 
@@ -116,6 +147,17 @@ public class Scheduler {
 
 	//routine = Routine.SJF | 
 	private void shortestJobFirst(){
-		//TODO
+		int sum = 0, count = 0;
+		//copy queue -> priorityQueue
+		PriorityQueue<Job> queueCopy = new PriorityQueue<Job>(queue);
+		queue.clear();
+		
+		while(!queueCopy.isEmpty()){
+			if(DEBUG)
+				System.out.println("Running job (" + (count++) + ") " + sum + "-" + 
+							  	  (sum+queueCopy.peek().getTime()));
+			sum += queueCopy.peek().getTime();
+			queueCopy.poll();
+		}	
 	}
 }
