@@ -1,6 +1,6 @@
 // Created By: Marcos alves
 // Created Date: Sept. 10th, 2016	  
-// Last Modified: Sept. 15th, 2016	      
+// Last Modified: Sept. 24th, 2016	      
 
 import java.util.*;
 import java.io.*;
@@ -12,24 +12,24 @@ public class Scheduler {
     public static final int SJF = 0x3;  //Shortest Job First
 	
 	//attributes
-	private float response, waiting, turnaround; //AVERAGE
+	private float avgResponse, avgWaiting, avgTurnaround; //AVERAGE
 	private int routine;
-	private Queue<Job> queue;
+	private QueueJob queue;
 	//print about Running jobs | true - print
-	protected static final boolean DEBUG = false;
+	protected static final boolean DEBUG = true;
 
 	//constructor
 	public Scheduler(int r){
-		response = waiting = turnaround = 0.0f;
+		avgResponse = avgWaiting = avgTurnaround = 0.0f;
 		routine = r;
-		queue = new LinkedList<Job>();
+		queue = new QueueJob();
 		
 		//expect path ../jobs.txt
 		loaderJobs();
 	}
 	
 	//methods
-	//routine = Routine.FCFS | 
+	//routine = FCFS | 
 	private void firstComeFirstServed(){
 		int accTime = 0, count = 0;
 		//get first element
@@ -41,17 +41,17 @@ public class Scheduler {
 			first = queue.poll(); 
 
 			if(DEBUG)
-				System.out.println("Running job (" + count + ") " + accTime + "-" + 
+				System.out.println("Running job (" + first.getID() + ") " + accTime + "-" + 
 							  	  (accTime+first.getTime()));
 			//increment queue
 			count++;
-			waiting+=accTime + offset - first.getArrival();
-			accTime+=first.getTime(); 
-			turnaround+=accTime + offset - first.getArrival();
+			avgWaiting += accTime + offset - first.getArrival();
+			accTime += first.getTime(); 
+			avgTurnaround += accTime + offset - first.getArrival();
 		}
-		turnaround/=count;
-		waiting/=count;
-		response=waiting;
+		avgTurnaround/=count;
+		avgWaiting/=count;
+		avgResponse=avgWaiting;
 	}
 
 	//print info about algorithm
@@ -65,7 +65,7 @@ public class Scheduler {
 			default: throw new IllegalArgumentException("Undefined reference routine!");
 		}
 		//print
-		System.out.printf("%s %.1f %.1f %.1f\n", nameAlgorithm, turnaround, response, waiting);
+		System.out.printf("%s %.1f %.1f %.1f\n", nameAlgorithm, avgTurnaround, avgResponse, avgWaiting);
 	}
 
 	//loaderJobs expected command "java Main < jobs.txt" 
@@ -81,7 +81,7 @@ public class Scheduler {
 
 			if(line.contains(" ")){
 				parts = line.split(" ");
-				queue.add(new Job(Integer.parseInt(parts[0]), Integer.parseInt(parts[1])));
+				queue.push(new Job(Integer.parseInt(parts[0]), Integer.parseInt(parts[1])));
 			} else
 				throw new IllegalArgumentException("File doens't contains SPACE!");
 		}	
@@ -90,11 +90,10 @@ public class Scheduler {
 	//print specific element (IF EXIST)
 	public void peekJob(int index){
 		int count = 1;
-
-		if(index > queue.size()){
-			for(Job j: queue){
+		if(index <= queue.size()){
+			for(Iterator j = queue.iterator(); j.hasNext();){
 				if(count == index)
-					System.out.println(j.toString()); break;
+					System.out.println(j.next().toString()); break;
 			}
 		} else
 			throw new IndexOutOfBoundsException("Outside range");
@@ -102,29 +101,35 @@ public class Scheduler {
 
 	//print all elements of queue 
 	public void printQueue(){
-		queue.forEach(j->System.out.println(j.toString()));
+		queue.forEach();
 	}
 
-	//routine = Routine.RR | 
+	//routine = RR | 
 	private void roundRobin(){
-		int sum = 0, count = 0;
+		int accTime = 0, count = 0;
 		final int quantum = 2; //IMPORTANT
-		Job first = null;
+		Job first = queue.peek();
+		int offset = first.getArrival();
 
 		while(!queue.isEmpty()){
+			//return and remove first element
+			first = queue.poll(); 
+
 			if(DEBUG)
-				System.out.println("Running job (" + (count++) + ") " + sum + "-" + 
-							  	  (sum+quantum));
-			sum += quantum;
+				System.out.println("Running job (" + first.getID() + ") " + accTime + "-" + 
+							  	  (accTime+quantum));
+
+			//add quantum
+			accTime+=quantum;			
 			//sub quantum of the job
-			queue.peek().subTime(quantum);
-			//return always first element 
-			first = queue.peek();
+			first.setTime(quantum, Job.SUB);
+			//check if finished
 			if(first.getTime() > 0)
-				queue.add(first);
-			//pop anyway
-			queue.poll();
-		}
+				queue.setClockAndAdd(first, quantum);
+			else
+				;//TODO
+		}	
+		System.out.println(avgWaiting/4);
 	}
 
 	//run scheduling-cpu
@@ -145,19 +150,8 @@ public class Scheduler {
 		}
 	}
 
-	//routine = Routine.SJF | 
+	//routine = SJF | 
 	private void shortestJobFirst(){
-		int sum = 0, count = 0;
-		//copy queue -> priorityQueue
-		PriorityQueue<Job> queueCopy = new PriorityQueue<Job>(queue);
-		queue.clear();
-		
-		while(!queueCopy.isEmpty()){
-			if(DEBUG)
-				System.out.println("Running job (" + (count++) + ") " + sum + "-" + 
-							  	  (sum+queueCopy.peek().getTime()));
-			sum += queueCopy.peek().getTime();
-			queueCopy.poll();
-		}	
+		//TODO
 	}
 }
