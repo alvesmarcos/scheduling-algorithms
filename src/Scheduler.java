@@ -1,71 +1,61 @@
 // Created By: Marcos alves
 // Created Date: Sept. 10th, 2016	  
-// Last Modified: Sept. 24th, 2016	      
+// Last Modified: Sept. 28th, 2016	      
 
 import java.util.*;
 import java.io.*;
 
 public class Scheduler {
-	//Algorithms scheduling
-	public static final int FCFS = 0x1; // First Come, First Served
-	public static final int RR = 0x2;	// Round-Robin
-    public static final int SJF = 0x3;  //Shortest Job First
-	
-	//attributes
-	private float avgResponse, avgWaiting, avgTurnaround; //AVERAGE
-	private int routine;
-	private QueueJob queue;
+	//enum algorithms scheduling
+	public enum Algorithm { FCFS, RR, SJF };
 	//print about Running jobs | true - print
-	protected static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
+
+	//attributes
+	private float meanResponse, meanWaiting, meanTurnaround;
+	private Algorithm algorithm;
+	private QueueJob queue;
 
 	//constructor
-	public Scheduler(int r){
-		avgResponse = avgWaiting = avgTurnaround = 0.0f;
-		routine = r;
+	public Scheduler(Algorithm alg){
+		meanResponse=meanWaiting=meanTurnaround=0.0f;
+		algorithm = alg;
 		queue = new QueueJob();
-		
 		//expect path ../jobs.txt
 		loaderJobs();
 	}
 	
 	//methods
-	//routine = FCFS | 
+	//algorithm = FCFS | 
 	private void firstComeFirstServed(){
-		int accTime = 0, count = 0;
-		//get first element
-		Job first = queue.peek();
-		int offset = first.getArrival();
+		int length = queue.size(), viewClock = 0;
+		Job tmp = null;
 
 		while(!queue.isEmpty()){
-			//return and remove first element
-			first = queue.poll(); 
+			//get first element
+			tmp = queue.peek(); 
+			//return clock of queue
+			viewClock = queue.getClock();
 
 			if(DEBUG)
-				System.out.println("Running job (" + first.getID() + ") " + accTime + "-" + 
-							  	  (accTime+first.getTime()));
-			//increment queue
-			count++;
-			avgWaiting += accTime + offset - first.getArrival();
-			accTime += first.getTime(); 
-			avgTurnaround += accTime + offset - first.getArrival();
+				System.out.println("Running job (" + tmp.getID() + ") " + (viewClock - tmp.getArrival()) + 
+								   "-" + (viewClock + tmp.getTime()));
+
+			tmp.execute(tmp.getTime(), viewClock);
+			tmp = queue.poll();	
+			meanWaiting += tmp.getWaiting();
+			meanTurnaround += tmp.getTurnaround();
+			meanResponse += tmp.getResponse();
 		}
-		avgTurnaround/=count;
-		avgWaiting/=count;
-		avgResponse=avgWaiting;
+		meanTurnaround/=length;
+		meanResponse/=length;
+		meanWaiting/=length;
 	}
 
 	//print info about algorithm
 	public void info(){
-		String nameAlgorithm;
-		//what algorithm ?
-		switch(routine){
-			case FCFS: nameAlgorithm = "FCFS"; break;
-			case SJF:  nameAlgorithm = "SJF"; break;
-			case RR:   nameAlgorithm = "RR"; break;
-			default: throw new IllegalArgumentException("Undefined reference routine!");
-		}
 		//print
-		System.out.printf("%s %.1f %.1f %.1f\n", nameAlgorithm, avgTurnaround, avgResponse, avgWaiting);
+		System.out.printf("%s %.1f %.1f %.1f\n", algorithm.name(), meanTurnaround, meanResponse, meanWaiting);
 	}
 
 	//loaderJobs expected command "java Main < jobs.txt" 
@@ -106,36 +96,41 @@ public class Scheduler {
 
 	//routine = RR | 
 	private void roundRobin(){
-		int accTime = 0, count = 0;
+		int length = queue.size(), viewClock = 0;
 		final int quantum = 2; //IMPORTANT
-		Job first = queue.peek();
-		int offset = first.getArrival();
+		Job tmp = null;
 
 		while(!queue.isEmpty()){
 			//return and remove first element
-			first = queue.poll(); 
+			tmp = queue.peek(); 
+			//return clock of queue
+			viewClock = queue.getClock();
 
 			if(DEBUG)
-				System.out.println("Running job (" + first.getID() + ") " + accTime + "-" + 
-							  	  (accTime+quantum));
+				System.out.println("Running job (" + tmp.getID() + ") " + (viewClock) + 
+								   "-" + (viewClock + quantum));
 
-			//add quantum
-			accTime+=quantum;			
-			//sub quantum of the job
-			first.setTime(quantum, Job.SUB);
-			//check if finished
-			if(first.getTime() > 0)
-				queue.setClockAndAdd(first, quantum);
-			else
-				;//TODO
+			
+			tmp.execute(quantum, viewClock);
+			tmp = queue.poll();	
+			
+			if(tmp.getTime() > 0)
+				queue.add(tmp);
+			else {
+				meanWaiting += tmp.getWaiting();
+				meanTurnaround += viewClock;
+			}
 		}	
-		System.out.println(avgWaiting/4);
+
+		meanTurnaround/=length;
+		meanResponse/=length;
+		meanWaiting/=length;
 	}
 
 	//run scheduling-cpu
 	public void run(){
 		//test how routine enum
-		switch(routine){
+		switch(algorithm){
 			case FCFS:
 				firstComeFirstServed();
 				break;
@@ -146,7 +141,7 @@ public class Scheduler {
 				roundRobin();
 				break;
 			default: 
-				throw new IllegalArgumentException("Undefined reference routine!");
+				throw new IllegalArgumentException("Undefined reference algorithm!");
 		}
 	}
 

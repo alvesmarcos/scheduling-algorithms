@@ -1,12 +1,12 @@
 // Created By: Marcos alves
 // Created Date: Sept. 24th, 2016	  
-// Last Modified: Sept. 24th, 2016	     
+// Last Modified: Sept. 28th, 2016	     
 
 import java.util.*;
 
 public class QueueJob {
 	//attributes
-	int clock, len;
+	private int clock, len;
 	private List<Job> listJob;
 
 	//constructor
@@ -17,22 +17,31 @@ public class QueueJob {
 
 	//methods
 	//Inserts the specified element at the specified position in this list
-	public void add(int index, Job j){
+	public void add(Job j){
+		int index = 0;
+		if(j.getArrival() <= clock){
+			for(int i = 0 ; i < len ; i++){
+				if(listJob.get(i).getState() == Job.State.CREATED)
+					break;
+				index++;
+			}
+			j.setState(Job.State.READY);
+			listJob.add(index, j);
+		} else
+			listJob.add(j);
 		len++;
-		j.setID(len);
-		listJob.add(index, j);
 	}
 	//clear listJob
 	public void clear(){
 		listJob.clear();
 	}
-	//return first element
-	public Job element(){
-		return listJob.get(0);
-	}
 	//print all elements
 	public void forEach(){
 		listJob.forEach(j->System.out.println(j));
+	}
+	//get clock
+	public int getClock(){
+		return clock;
 	}
 	//check if is empty
 	public boolean isEmpty(){
@@ -42,53 +51,57 @@ public class QueueJob {
 	public Iterator<Job> iterator(){
 		return listJob.iterator();
 	}
-	//add in listJob 
-	public boolean offer(Job j){
-		return listJob.add(j);
-	}
 	//return frist element or null
 	public Job peek(){
 		if(listJob.isEmpty())
 			return null;
 		else
-			return element();
+			return listJob.get(0);
 	}
 	//retrieves and removes the head of this queue, or returns null if this queue is empty
 	public Job poll(){
 		if(listJob.isEmpty())
 			return null;
-		else 
-			return remove();
+		len--;
+		Job tmp = listJob.get(0);
+		
+		if(tmp.getState() == Job.State.RUNNING){
+			//refresh queue | clock
+			tmp.setState(Job.State.TERMINATED);
+			clock += tmp.getRunning();
+
+			listJob.remove(0);
+		} else
+			throw new RuntimeException("State is not RUNNING");
+
+		refresh();
+		return tmp;	
 	}
 	//add in listJob
 	public boolean push(Job j){
 		len++;
 		j.setID(len);
+		//sync clock with first job
+		if(len==1)
+			clock = j.getArrival();
+
+		if(j.getArrival() <= clock)
+			j.setState(Job.State.READY);
+		else
+			j.setState(Job.State.CREATED);
+		
 		return listJob.add(j);
 	}
-	//retrieves and removes the head of this queue
-	public Job remove(){
-		len--;
-		Job tmp = listJob.get(0);
-		listJob.remove(0);
-		return tmp;
-	}
-	//add in adjust clock
-	public void setClockAndAdd(Job j, int time){
-		clock+=time;
-		int index=-1;
-		for(int i = 0 ; i < len; i++){
-			if(listJob.get(i).getArrival() > clock){
-				index=i; 
+	//refresh queue | clock/response/turnround/waiting
+	private void refresh(){
+		for(int i = 0 ; i < len ; i++){
+			if(listJob.get(i).getArrival() <= clock)
+				listJob.get(i).setState(Job.State.READY);
+			else
 				break;
-			}
 		}
-		if(index==-1)
-			push(j);
-		else
-			add(index, j);
-		
 	}
+
 	//return size listJob
 	public int size(){
 		return len;
