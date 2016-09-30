@@ -5,7 +5,8 @@
 
 import java.util.Queue;
 import java.util.PriorityQueue;
-// SJF - Shortest Job First
+import java.util.List;
+import java.util.ArrayList;
 // IMPORT: Your class Job need implements interface Comparable
 
 public abstract class AlgorithmScheduler {
@@ -19,7 +20,7 @@ public abstract class AlgorithmScheduler {
 		float waiting = 0.0f, turnaround = 0.0f;
 		// aux
 		int length = queue.size();
-		int duration = 0, clock = 0, calculus = 0;
+		int duration = 0, clock = 0, sum = 0;
 		Job tmp = queue.peek();
 		int offset = tmp.getArrival(); 
 		// != empty
@@ -30,9 +31,9 @@ public abstract class AlgorithmScheduler {
 			if(DEBUG)
 				System.out.printf("Running job (%d) $ %d %d\n", tmp.getID(), clock, clock+duration);
 			// set values
-			calculus = (clock + offset) - tmp.getArrival();
-			waiting += calculus;
-			turnaround += calculus + duration;
+			sum = (clock + offset) - tmp.getArrival();
+			waiting += sum;
+			turnaround += sum + duration;
 			clock += duration;
 		}
 		waiting/=length;
@@ -43,17 +44,50 @@ public abstract class AlgorithmScheduler {
 	}
 
 	// RR - Round Robin
-	public static void RR(Queue<Job> queue){ /* ToDo */ };
+	public static void RR(Queue<Job> queue){ 
+		// List
+		List<Job> list = new ArrayList<Job>(queue);
+		// IMPORT
+		final int quantum = 2;
+		// average values
+		float response = 0.0f, waiting = 0.0f, turnaround = 0.0f;
+		// aux
+		int length = queue.size();
+		int duration = 0, clock = 0, sub = 0, index = 0;
+		Job tmp = null;
+
+		while(!list.isEmpty()){
+			// get first element
+			tmp = list.get(0);
+			duration = tmp.getDuration();
+			sub = quantum > duration ? duration: quantum;
+
+			if(DEBUG)
+				System.out.printf("Running job (%d) $ %d %d\n", tmp.getID(), clock, clock + sub);
+			// set values
+			tmp.subDuration(sub);
+			clock += duration;
+			if(tmp.getDuration() > 0){
+				for(int i = 0 ; i < list.size() ; ++i){
+					if(list.get(i).getArrival() <= clock)
+						index++;
+				}
+				list.add(index, tmp);
+			} else
+				;
+			list.remove(0);
+		}	
+	}
 	
 	// SJF - Shortest Job First
 	public static void SJF(Queue<Job> queue) {
-		//Need PriorityQueue
+		// Need PriorityQueue
 		Queue<Job> priorityQueue = new PriorityQueue<Job>();
 		// average values
 		float waiting = 0.0f, turnaround = 0.0f;
 		// aux
 		int length = queue.size();
-		int duration = 0, clock = 0, calculus = 0;
+		int duration = 0, clock = 0, sum = 0;
 		Job tmp = queue.peek();
 		int offset = tmp.getArrival();
 		// != empty
@@ -68,9 +102,9 @@ public abstract class AlgorithmScheduler {
 			if(DEBUG)
 				System.out.printf("Running job (%d) $ %d %d\n", tmp.getID(), clock, clock+duration);
 			// set values
-			calculus = (clock + offset) - tmp.getArrival();
-			waiting += calculus;
-			turnaround += calculus + duration;
+			sum = (clock + offset) - tmp.getArrival();
+			waiting += sum;
+			turnaround += sum + duration;
 			clock += duration;
 			priorityQueue.poll();
 		
