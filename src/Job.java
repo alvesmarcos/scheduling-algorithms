@@ -1,99 +1,46 @@
-// Created By: Marcos alves
-// Created Date: Sept. 10th, 2016	  
-// Last Modified: Sept. 28th, 2016	      
+// v. Java SE 8
+// --
+// Author: Marcos Alves
+// ++     
 
-public class Job {
-	//enum
-	public enum State { CREATED, READY, RUNNING, BLOCKED, TERMINATED };
+public class Job implements Comparable<Job> {
 	//attributes
-	private int arrival, identity, time;
-	private int response, waiting, turnaround, running, out;
-	private State state;
+	private int arrival, duration, id;
 
 	//constructor
-	public Job(int arr, int tim){
-		arrival = arr;
-		time = tim;
-		out=response=waiting=identity=running=turnaround=0;
+	public Job(int id ,int arrival, int duration){
+		this.arrival = arrival;
+		this.duration = duration;
+		this.id = id;
 	} 
 
 	//methods
-	//execute
-	public void execute(int t, int sysc){
-		if(state == State.READY){
-			state = State.RUNNING;
-			waiting += sysc - arrival - turnaround;
-			turnaround += waiting + t;
-			//last time
-			out = sysc + t; 
-			arrival = 0;
-			time -= t;
-			running = t;
-		} else
-			throw new IllegalArgumentException("State is not READY");
+	public int compareTo(Job j){
+		if(duration > j.duration)
+			return 1;
+		else if (duration < j.duration)
+			return -1;
+		else 
+			return 0;
 	}
 	//get arrival
 	public int getArrival(){
 		return arrival;
 	}
+	//get duration
+	public int getDuration(){
+		return duration;
+	}
 	//get identity
 	public int getID(){
-		return identity;
-	}
-	//get out
-	public int getOut(){
-		return out;
-	}
-	//get response
-	public int getResponse(){
-		return response;
-	}
-	//get run
-	public int getRunning(){
-		return running;
-	}
-	//get state
-	public State getState(){
-		return state;
-	}
-	//get time
-	public int getTime(){
-		return time;
-	}
-	//get turnaround
-	public int getTurnaround(){
-		return turnaround;
-	}
-	//get waiting
-	public int getWaiting(){
-		return waiting;
+		return id;
 	}
 	//set id
 	public void setID(int index){
-		identity = identity==0 ? index : identity;
-	}
-	//set response
-	public void setResponse(int value){
-		response += value;
-	}
-	//set state
-	public void setState(State s){
-		state = s;
-	}
-	//set time
-	public void setTime(int value){
-		time += value;
-	}
-	//set turnaround
-	public void setTurnaround(int value){
-		turnaround += value;
-	}
-	//set waiting
-	public void setWaiting(int value){
-		waiting += value;
+		id = id==0 ? index : id;
 	}
 	//return string formatted
 	public String toString(){
-		return "Arrival: "+arrival+" | Time: "+time;
+		return "Arrival: "+ arrival +" | Time: "+ duration;
 	}
 }
