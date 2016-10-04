@@ -1,8 +1,11 @@
-// Created By: Marcos alves
-// Created Date: Sept. 10th, 2016	  
-// Last Modified: Sept. 28th, 2016	      
+// v. Java SE 8
+// --
+// Author: Marcos Alves
+// ++          
 
-import java.util.*;
+import java.util.Queue;
+import java.util.Scanner;
+import java.util.LinkedList;
 
 public class Main {
 	public static void main(String args[]){
@@ -23,7 +26,8 @@ public class Main {
 			} else
 				throw new IllegalArgumentException("File doens't contains SPACE!");
 		}	
-
-		AlgorithmScheduler.SJF(queue);
+		AlgorithmScheduler.FCFS(new LinkedList<Job>(queue));
+		AlgorithmScheduler.SJF(new LinkedList<Job>(queue));	
+		AlgorithmScheduler.RR(new LinkedList<Job>(queue));
 	}
 }
