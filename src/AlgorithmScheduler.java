@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public abstract class AlgorithmScheduler {
 	// Variable control printf
-	private static boolean DEBUG = true;
+	private static boolean DEBUG = false;
 	private static boolean INFO = true;
 
 	// FCFS - Fist Come, First Served
@@ -53,30 +53,47 @@ public abstract class AlgorithmScheduler {
 		float response = 0.0f, waiting = 0.0f, turnaround = 0.0f;
 		// aux
 		int length = queue.size();
-		int duration = 0, clock = 0, sub = 0, index = 0;
-		Job tmp = null;
+		int exec = 0, index = 0;
+		Job tmp = list.get(0);
+		int clock = tmp.getArrival();
 
 		while(!list.isEmpty()){
 			// get first element
 			tmp = list.get(0);
-			duration = tmp.getDuration();
-			sub = quantum > duration ? duration: quantum;
+			exec = quantum > tmp.getDuration() ? tmp.getDuration() : quantum;
 
 			if(DEBUG)
-				System.out.printf("Running job (%d) $ %d %d\n", tmp.getID(), clock, clock + sub);
+				System.out.printf("Running job (%d) $ %d %d\n", tmp.getID(), clock, clock + exec);
+			//first response
+			if(!tmp.get()){
+				tmp.set(true);
+				waiting -= tmp.getDuration();
+				response += clock - tmp.getArrival();
+			}
 			// set values
-			tmp.subDuration(sub);
-			clock += duration;
+			tmp.subDuration(exec);
+			clock += exec;
+			
 			if(tmp.getDuration() > 0){
+				index = 0;
 				for(int i = 0 ; i < list.size() ; ++i){
-					if(list.get(i).getArrival() <= clock)
-						index++;
+					if(list.get(i).getArrival() > clock)
+						break;
+					index++;
 				}
 				list.add(index, tmp);
-			} else
-				;
+			} else {
+				turnaround += clock - tmp.getArrival(); 
+				waiting += clock - tmp.getArrival(); 
+			}
 			list.remove(0);
 		}	
+		waiting/=length;
+		turnaround/=length;
+		response/=length;
+		// Info about RR
+		if(INFO)
+			System.out.printf("RR %.1f %.1f %.1f\n", turnaround, response, waiting);
 	}
 	
 	// SJF - Shortest Job First
@@ -115,6 +132,5 @@ public abstract class AlgorithmScheduler {
 		// needless to calculate the response time since waiting = response (ALWAYS)
 		if(INFO)
 			System.out.printf("SJF %.1f %.1f %.1f\n", turnaround, waiting, waiting);
-
 	} 
 } 
